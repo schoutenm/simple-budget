@@ -1,0 +1,88 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Figtree", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Fraunces", ui-serif, Georgia, serif;
+
+  --color-bg: #0c0c0d;
+  --color-surface: #141413;
+  --color-raised: #1c1c1a;
+  --color-fg: #f3f1ec;
+  --color-muted: #8e8b85;
+  --color-subtle: #6a6762;
+  --color-border: color-mix(in oklab, var(--color-fg) 12%, transparent);
+  --color-border-strong: color-mix(in oklab, var(--color-fg) 22%, transparent);
+  --color-accent: #dfe3db;
+  --color-accent-fg: #141413;
+  --color-danger: #d07060;
+  --color-warn: #c4a574;
+  --color-spent: color-mix(in oklab, var(--color-fg) 10%, transparent);
+  --color-overlay: rgb(0 0 0 / 0.62);
+
+  --color-cat-1: #e08a68;
+  --color-cat-2: #7faf88;
+  --color-cat-3: #7f97b8;
+  --color-cat-4: #c4a06a;
+  --color-cat-5: #8aa090;
+  --color-cat-6: #c4846c;
+  --color-cat-7: #6a9aa0;
+  --color-cat-8: #b89a82;
+
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+  --radius-2xl: 2rem;
+
+  --text-display: 3rem;
+  --text-hero: 2.25rem;
+
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-smooth-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --motion-quick: 150ms;
+  --motion-fast: 250ms;
+  --motion-slow: 400ms;
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background: var(--color-bg);
+    color: var(--color-fg);
+  }
+
+  body {
+    min-height: 100dvh;
+    background: var(--color-bg);
+    color: var(--color-fg);
+    font-family: var(--font-sans);
+    overscroll-behavior: none;
+    touch-action: manipulation;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
+@layer utilities {
+  .pb-safe {
+    padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
+  }
+
+  .pt-safe {
+    padding-top: max(0.75rem, env(safe-area-inset-top));
+  }
+
+  .shadow-fab {
+    box-shadow: 0 12px 40px rgb(0 0 0 / 0.45);
+  }
+}
