@@ -1,7 +1,8 @@
 import { formatCents } from "@/lib/money";
 import { formatCycleRange, summarizeCycle, toISODate } from "@/lib/cycle";
+import { categoriesForCycle } from "@/lib/ledger";
 import { cn } from "@/lib/utils";
-import type { Category, Cycle, Expense } from "@/lib/types";
+import type { Category, Cycle, CycleSnapshot, Expense } from "@/lib/types";
 import {
   Drawer,
   DrawerContent,
@@ -14,6 +15,7 @@ export function HistoryPanel({
   onOpenChange,
   cycles,
   categories,
+  snapshots,
   expenses,
   startDay,
   viewingStartIso,
@@ -23,6 +25,7 @@ export function HistoryPanel({
   onOpenChange: (open: boolean) => void;
   cycles: Cycle[];
   categories: Category[];
+  snapshots: Record<string, CycleSnapshot>;
   expenses: Expense[];
   startDay: number;
   viewingStartIso: string;
@@ -42,13 +45,19 @@ export function HistoryPanel({
           </div>
           <ul className="flex flex-col gap-2 pb-6">
             {cycles.map((cycle) => {
-              const summary = summarizeCycle(cycle, categories, expenses, now, startDay);
+              const summary = summarizeCycle(
+                cycle,
+                categoriesForCycle(cycle, snapshots, categories),
+                expenses,
+                now,
+                startDay,
+              );
               const iso = toISODate(cycle.start);
               const selected = iso === viewingStartIso;
               const used =
-                summary.totalBudgetCents <= 0
+                summary.totalAvailableCents <= 0
                   ? 0
-                  : Math.min(1, summary.totalSpentCents / summary.totalBudgetCents);
+                  : Math.min(1, summary.totalSpentCents / summary.totalAvailableCents);
               return (
                 <li key={iso}>
                   <button
@@ -86,7 +95,7 @@ export function HistoryPanel({
                     </span>
                     <span className="text-xs text-muted tabular-nums">
                       spent {formatCents(summary.totalSpentCents)} of{" "}
-                      {formatCents(summary.totalBudgetCents)}
+                      {formatCents(summary.totalAvailableCents)}
                     </span>
                   </button>
                 </li>

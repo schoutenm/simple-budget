@@ -10,6 +10,7 @@ import {
   summarizeCycle,
   toISODate,
 } from "@/lib/cycle";
+import { categoriesForCycle } from "@/lib/ledger";
 import { formatCents } from "@/lib/money";
 import { currentCycleStartIso, useBudgetStore } from "@/store/budget-store";
 import { CategoryRows } from "./category-rows";
@@ -41,8 +42,12 @@ export function AppHome() {
   const loadSample = useBudgetStore((s) => s.loadSample);
   const clearExpenses = useBudgetStore((s) => s.clearExpenses);
 
+  const cycleSnapshots = useBudgetStore((s) => s.cycleSnapshots);
+
   useEffect(() => {
-    void useBudgetStore.persist.rehydrate();
+    void Promise.resolve(useBudgetStore.persist.rehydrate()).then(() => {
+      useBudgetStore.getState().ensureCurrentCycle();
+    });
   }, []);
 
   const now = useMemo(() => new Date(), [expenses.length, cycleStartDay]);
@@ -57,9 +62,13 @@ export function AppHome() {
     return current;
   }, [viewingStartIso, cycleStartDay, current]);
 
+  const viewingCategories = useMemo(
+    () => categoriesForCycle(viewing, cycleSnapshots, categories),
+    [viewing, cycleSnapshots, categories],
+  );
   const summary = useMemo(
-    () => summarizeCycle(viewing, categories, expenses, now, cycleStartDay),
-    [viewing, categories, expenses, now, cycleStartDay],
+    () => summarizeCycle(viewing, viewingCategories, expenses, now, cycleStartDay),
+    [viewing, viewingCategories, expenses, now, cycleStartDay],
   );
   const cycles = useMemo(
     () => listCycles(expenses, cycleStartDay, now),
@@ -113,7 +122,7 @@ export function AppHome() {
         <h2 className="mb-1 text-sm font-medium text-fg">This cycle</h2>
         <ExpenseList
           expenses={summary.expenses}
-          categories={categories}
+          categories={viewingCategories}
           onRemove={removeExpense}
         />
       </section>
@@ -130,13 +139,13 @@ export function AppHome() {
       <LogSpend
         open={logOpen}
         onOpenChange={setLogOpen}
-        categories={categories}
+        categories={viewingCategories}
         cycle={viewing}
         isCurrent={summary.isCurrent}
         presetCategoryId={presetCategoryId}
         onLog={(input) => {
           addExpense(input);
-          const category = categories.find((item) => item.id === input.categoryId);
+          const category = viewingCategories.find((item) => item.id === input.categoryId);
           toast.success(
             `Logged ${formatCents(input.amountCents)}${category ? ` · ${category.name}` : ""}`,
           );
@@ -164,6 +173,7 @@ export function AppHome() {
         onOpenChange={setHistoryOpen}
         cycles={cycles}
         categories={categories}
+        snapshots={cycleSnapshots}
         expenses={expenses}
         startDay={cycleStartDay}
         viewingStartIso={viewingStartIso ?? currentCycleStartIso(cycleStartDay, now)}

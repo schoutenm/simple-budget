@@ -3,6 +3,16 @@ export type Category = {
   name: string;
   budgetCents: number;
   colorId: number;
+  carryForward: boolean;
+};
+
+export type CycleCategory = Category & {
+  surplusCents: number;
+};
+
+export type CycleSnapshot = {
+  startIso: string;
+  categories: CycleCategory[];
 };
 
 export type Expense = {
@@ -18,14 +28,17 @@ export type Cycle = {
 };
 
 export type CategorySummary = {
-  category: Category;
+  category: CycleCategory;
   spentCents: number;
   remainingCents: number;
+  availableCents: number;
 };
 
 export type CycleSummary = {
   cycle: Cycle;
   totalBudgetCents: number;
+  totalSurplusCents: number;
+  totalAvailableCents: number;
   totalSpentCents: number;
   totalRemainingCents: number;
   categories: CategorySummary[];

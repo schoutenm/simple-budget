@@ -6,9 +6,9 @@ import {
   startOfDay,
 } from "date-fns";
 import type {
-  Category,
   CategorySummary,
   Cycle,
+  CycleCategory,
   CycleSummary,
   Expense,
 } from "./types";
@@ -103,9 +103,29 @@ export function listCycles(
   return cycles.reverse();
 }
 
+export function listDataCycles(
+  expenses: Expense[],
+  startDay: number,
+  now: Date,
+): Cycle[] {
+  const current = cycleContaining(now, startDay);
+  let earliest = current.start;
+  for (const expense of expenses) {
+    const date = parseISODate(expense.date);
+    if (date < earliest) earliest = date;
+  }
+  const cycles: Cycle[] = [];
+  let cursor = cycleContaining(earliest, startDay);
+  while (cursor.start.getTime() <= current.start.getTime()) {
+    cycles.push(cursor);
+    cursor = nextCycle(cursor, startDay);
+  }
+  return cycles;
+}
+
 export function summarizeCycle(
   cycle: Cycle,
-  categories: Category[],
+  categories: CycleCategory[],
   expenses: Expense[],
   now: Date,
   startDay: number,
@@ -124,10 +144,12 @@ export function summarizeCycle(
 
   const categorySummaries: CategorySummary[] = categories.map((category) => {
     const spentCents = spentByCategory.get(category.id) ?? 0;
+    const availableCents = category.budgetCents + category.surplusCents;
     return {
       category,
       spentCents,
-      remainingCents: category.budgetCents - spentCents,
+      availableCents,
+      remainingCents: availableCents - spentCents,
     };
   });
 
@@ -135,6 +157,11 @@ export function summarizeCycle(
     (sum, category) => sum + category.budgetCents,
     0,
   );
+  const totalSurplusCents = categories.reduce(
+    (sum, category) => sum + category.surplusCents,
+    0,
+  );
+  const totalAvailableCents = totalBudgetCents + totalSurplusCents;
   const totalSpentCents = inCycle.reduce(
     (sum, expense) => sum + expense.amountCents,
     0,
@@ -143,8 +170,10 @@ export function summarizeCycle(
   return {
     cycle,
     totalBudgetCents,
+    totalSurplusCents,
+    totalAvailableCents,
     totalSpentCents,
-    totalRemainingCents: totalBudgetCents - totalSpentCents,
+    totalRemainingCents: totalAvailableCents - totalSpentCents,
     categories: categorySummaries,
     expenses: inCycle,
     daysLeft: daysLeft(cycle, now),

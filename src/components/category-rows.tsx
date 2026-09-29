@@ -21,11 +21,13 @@ export function CategoryRows({
   return (
     <ul className="flex flex-col gap-2">
       {rows.map((row) => {
-        const budget = row.category.budgetCents;
+        const available = row.availableCents;
         const remaining = row.remainingCents;
         const over = remaining < 0;
-        const used = budget <= 0 ? (row.spentCents > 0 ? 1 : 0) : Math.min(1, row.spentCents / budget);
+        const used =
+          available <= 0 ? (row.spentCents > 0 ? 1 : 0) : Math.min(1, row.spentCents / available);
         const leftRatio = Math.max(0, 1 - used);
+        const surplus = row.category.surplusCents;
 
         return (
           <li key={row.category.id}>
@@ -40,8 +42,15 @@ export function CategoryRows({
               />
               <span className="min-w-0 flex-1">
                 <span className="flex items-baseline justify-between gap-3">
-                  <span className="truncate text-sm font-medium text-fg">
-                    {row.category.name}
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-medium text-fg">
+                      {row.category.name}
+                    </span>
+                    {surplus > 0 ? (
+                      <span className="text-xs text-muted tabular-nums">
+                        {formatCents(surplus)} carried
+                      </span>
+                    ) : null}
                   </span>
                   <span
                     className={cn(

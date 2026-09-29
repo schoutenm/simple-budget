@@ -63,22 +63,35 @@ function CategoryEditor({
   onRemove,
 }: {
   category: Category;
-  onSave: (patch: { name: string; budgetCents: number; colorId: number }) => void;
+  onSave: (patch: {
+    name: string;
+    budgetCents: number;
+    colorId: number;
+    carryForward: boolean;
+  }) => void;
   onRemove: () => void;
 }) {
   const [name, setName] = useState(category.name);
   const [budget, setBudget] = useState(centsToDollarInput(category.budgetCents));
   const [colorId, setColorId] = useState(category.colorId);
+  const [carryForward, setCarryForward] = useState(category.carryForward);
   const [confirmRemove, setConfirmRemove] = useState(false);
+
+  function save(next?: Partial<{ name: string; budgetCents: number; colorId: number; carryForward: boolean }>) {
+    onSave({
+      name: next?.name ?? name,
+      budgetCents: next?.budgetCents ?? dollarsToCents(budget),
+      colorId: next?.colorId ?? colorId,
+      carryForward: next?.carryForward ?? carryForward,
+    });
+  }
 
   return (
     <div className="flex flex-col gap-3 rounded-lg bg-raised p-3">
       <Input
         value={name}
         onChange={(event) => setName(event.target.value)}
-        onBlur={() =>
-          onSave({ name, budgetCents: dollarsToCents(budget), colorId })
-        }
+        onBlur={() => save({ name })}
         aria-label="Category name"
       />
       <label className="text-xs font-medium text-muted">
@@ -91,9 +104,7 @@ function CategoryEditor({
             inputMode="decimal"
             value={budget}
             onChange={(event) => setBudget(event.target.value)}
-            onBlur={() =>
-              onSave({ name, budgetCents: dollarsToCents(budget), colorId })
-            }
+            onBlur={() => save({ budgetCents: dollarsToCents(budget) })}
             className="pl-7"
           />
         </div>
@@ -102,9 +113,36 @@ function CategoryEditor({
         value={colorId}
         onChange={(id) => {
           setColorId(id);
-          onSave({ name, budgetCents: dollarsToCents(budget), colorId: id });
+          save({ colorId: id });
         }}
       />
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="text-sm font-medium text-fg">Carry leftover</p>
+          <p className="text-xs text-muted">Unused funds become next cycle’s surplus.</p>
+        </div>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={carryForward}
+          onClick={() => {
+            const next = !carryForward;
+            setCarryForward(next);
+            save({ carryForward: next });
+          }}
+          className={cn(
+            "relative h-7 w-12 shrink-0 rounded-full transition-colors duration-(--motion-quick) ease-(--ease-out)",
+            carryForward ? "bg-accent" : "bg-bg ring-1 ring-border-strong",
+          )}
+        >
+          <span
+            className={cn(
+              "absolute top-0.5 left-0.5 size-6 rounded-full transition-transform duration-(--motion-quick) ease-(--ease-out)",
+              carryForward ? "translate-x-5 bg-accent-fg" : "translate-x-0 bg-muted",
+            )}
+          />
+        </button>
+      </div>
       {confirmRemove ? (
         <Button variant="danger" onClick={onRemove}>
           Remove {category.name}?
@@ -143,7 +181,7 @@ export function SettingsPanel({
   onAddCategory: (input: { name: string; budgetCents: number; colorId?: number }) => void;
   onUpdateCategory: (
     id: string,
-    patch: Partial<Pick<Category, "name" | "budgetCents" | "colorId">>,
+    patch: Partial<Pick<Category, "name" | "budgetCents" | "colorId" | "carryForward">>,
   ) => void;
   onRemoveCategory: (id: string) => void;
   onLoadSample: () => void;
@@ -168,7 +206,8 @@ export function SettingsPanel({
           <div>
             <DrawerTitle>Settings</DrawerTitle>
             <DrawerDescription>
-              Categories, budgets, and when the month refills.
+              Category edits apply from this cycle forward. Closed months keep the
+              categories and budgets they had.
             </DrawerDescription>
           </div>
 

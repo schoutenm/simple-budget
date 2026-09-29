@@ -3,11 +3,11 @@ import { cycleContaining, previousCycle, toISODate } from "./cycle";
 import type { Category, Expense } from "./types";
 
 export const SAMPLE_CATEGORIES: Category[] = [
-  { id: "cat-eat", name: "Eating out", budgetCents: 25000, colorId: 1 },
-  { id: "cat-coffee", name: "Coffee", budgetCents: 6000, colorId: 4 },
-  { id: "cat-fun", name: "Fun", budgetCents: 18000, colorId: 2 },
-  { id: "cat-shop", name: "Shopping", budgetCents: 12000, colorId: 3 },
-  { id: "cat-other", name: "Other", budgetCents: 8000, colorId: 5 },
+  { id: "cat-eat", name: "Eating out", budgetCents: 25000, colorId: 1, carryForward: false },
+  { id: "cat-coffee", name: "Coffee", budgetCents: 6000, colorId: 4, carryForward: false },
+  { id: "cat-fun", name: "Fun", budgetCents: 18000, colorId: 2, carryForward: true },
+  { id: "cat-shop", name: "Shopping", budgetCents: 12000, colorId: 3, carryForward: false },
+  { id: "cat-other", name: "Other", budgetCents: 8000, colorId: 5, carryForward: false },
 ];
 
 const PATTERN: { dayOffset: number; categoryId: string; amountCents: number }[] = [

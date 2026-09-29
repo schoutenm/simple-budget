@@ -23,7 +23,7 @@ function pieSlices(summary: CycleSummary): Slice[] {
 
   const spentCap = Math.min(
     Math.max(summary.totalSpentCents, 0),
-    Math.max(summary.totalBudgetCents, 0),
+    Math.max(summary.totalAvailableCents, 0),
   );
 
   if (spentCap > 0) {
@@ -105,11 +105,16 @@ export function RemainingPie({ summary }: { summary: CycleSummary }) {
             {formatCents(summary.totalRemainingCents)}
           </p>
           <p className="mt-2 text-sm text-muted tabular-nums">
-            of {formatCents(summary.totalBudgetCents)}
+            of {formatCents(summary.totalAvailableCents)}
           </p>
         </div>
       </div>
-      <p className="mt-3 text-center text-sm text-muted">
+      {summary.totalSurplusCents > 0 ? (
+        <p className="mt-3 text-center text-sm text-muted">
+          {formatCents(summary.totalSurplusCents)} carried from last cycle
+        </p>
+      ) : null}
+      <p className={`text-center text-sm text-muted ${summary.totalSurplusCents > 0 ? "mt-1" : "mt-3"}`}>
         {summary.isCurrent
           ? summary.daysLeft === 0
             ? `Refills ${formatRefillDate(summary.cycle)}`
